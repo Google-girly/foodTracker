@@ -37,6 +37,32 @@ app.get('/', (req, res) => {
     res.render('login.ejs');
 });
 
+//Login ACTION
+app.post('/login', async (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+
+    const sql = `SELECT * FROM userAccount WHERE userName = ?`;
+    const [rows] = await conn.query(sql, [username]);
+
+    if (rows.length === 0) {
+        return res.render('login.ejs', { error: "Wrong credentials!" });
+    }
+
+    const hashedPassword = rows[0].userPassword;
+
+    // compare the typed in password to the hashedpassword
+    const match = await bcrypt.compare(password, hashedPassword);
+
+    if (match) {
+        req.session.userAuthenticated = true;
+        req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
+        res.render('addMeal.ejs');
+    } else {
+        res.render('login.ejs', { error: "Wrong credentials!" });
+    }
+});
+
 // Serve the sign-up page (GET request)
 app.get('/signUp', (req, res) => {
     res.render('signUp.ejs');  
@@ -67,32 +93,17 @@ app.post('/signUp', async (req, res) => {
     res.render('login.ejs', { success: "Account created successfully. Please log in." });
 });
 
+// lets user add meal
+app.post('/addMeal', async (req, res) => {
+	//Get values from form
+	const { meal_name } = req.body;
 
-app.post('/login', async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
+	//Check if meal already exists in database
+	let sql = `SELECT * FROM Meal
+		
 
-
-    const sql = `SELECT * FROM userAccount WHERE userName = ?`;
-    const [rows] = await conn.query(sql, [username]);
-
-    if (rows.length === 0) {
-        return res.render('login.ejs', { error: "Wrong credentials!" });
-    }
-
-    const hashedPassword = rows[0].userPassword;
-
-    // compare the typed in password to the hashedpassword
-    const match = await bcrypt.compare(password, hashedPassword);
-
-    if (match) {
-        req.session.userAuthenticated = true;
-        req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
-        res.render('addMeal.ejs');
-    } else {
-        res.render('login.ejs', { error: "Wrong credentials!" });
-    }
 });
+
 
 // Start the server
 app.listen(3000, () => {
