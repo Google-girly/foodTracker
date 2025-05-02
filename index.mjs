@@ -42,6 +42,12 @@ app.get('/signUp', (req, res) => {
     res.render('signUp.ejs');  
 });
 
+app.get('/mealHistory', (req, res) => {
+
+    
+    res.render('mealHistory.ejs');  
+});
+
 // lets user sign up
 app.post('/signUp', async (req, res) => {
     const { firstName, lastName, userName, userPassword } = req.body;
