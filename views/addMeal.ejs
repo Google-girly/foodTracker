@@ -8,8 +8,21 @@
 <body>
     MEAL ADD PAGE
 <br>
-Meal Name  <input type="text" name="meal_name" value=""><br> breakfast, lunch, dinner, snacks (Delete this later probably. Those are just the options)
+Meal:
+<select name="meal" id="mealAddID">
+    <option value="breakfast">Breakfast</option>
+    <option value="lunch">Lunch</option>
+    <option value="dinner">Dinner</option>
+    <option value="snack">Snack</option>
+  </select>
+<!-- so then for index.mjs we need to get the value of the dropdown and add it to the database -->
+
 
 <button>+ Add Meal</button>
+<br>
+<br>
+after pressing the add meal button
+<br>
+a pop up will show to enter the food? and we'll have the information about the food (Protein, carbs, fats)
 </body>
 </html>

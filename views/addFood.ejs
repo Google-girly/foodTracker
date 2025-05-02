@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Food</title>
+</head>
+<body>
+    <h1>Add Food Page</h1>
+
+    <% if (message) { %>
+        <p style="color:green;"><%= message %></p>
+    <% } %>
+
+    <form action="/addFood" method="POST">
+        <label for="dateFood">Date:</label><br>
+        <input type="date" id="dateFood" name="dateFood"><br>
+
+        <label for="insertFood">Food:</label>
+        <input type="text" id="insertFood" name="insertFood"><br>
+
+        <button type="submit">Add food</button>
+    </form>
+
+    <h2>Food Entries:</h2>
+    <ul>
+        <% if (foodList) { %>
+            <% foodList.forEach(food => { %>
+                <li><%= food.date %> - <%= food.food %></li>
+            <% }) %>
+        <% } %>
+    </ul>
+</body>
+</html>

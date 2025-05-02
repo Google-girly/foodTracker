@@ -44,7 +44,7 @@ app.get('/signUp', (req, res) => {
 
 // lets user sign up
 app.post('/signUp', async (req, res) => {
-    const { firstName, lastName, userName, userPassword } = req.body;
+    const { firstName, lastName, userName, userPassword, age, gender, userPlan} = req.body;
 
     // Check if the username already exists in the database
     let sql = `SELECT * FROM userAccount WHERE userName = ?`;
@@ -59,8 +59,8 @@ app.post('/signUp', async (req, res) => {
     const hashedPassword = await bcrypt.hash(userPassword, 10);
 
     // insert the new user into the database
-    sql = `INSERT INTO userAccount (firstName, lastName, userName, userPassword) VALUES (?, ?, ?, ?)`;
-    const sqlParams = [firstName, lastName, userName, hashedPassword];
+    sql = `INSERT INTO userAccount (firstName, lastName, userName, userPassword, age, gender, userPlan) VALUES (?, ?, ?, ?,?,?,?)`;
+    const sqlParams = [firstName, lastName, userName, hashedPassword, age, gender, userPlan];
     await conn.query(sql, sqlParams);
 
 
@@ -86,13 +86,30 @@ app.post('/login', async (req, res) => {
     const match = await bcrypt.compare(password, hashedPassword);
 
     if (match) {
-        req.session.userAuthenticated = true;
-        req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
-        res.render('addMeal.ejs');
+        // req.session.userAuthenticated = true;
+        // req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
+        res.render('home.ejs');
     } else {
         res.render('login.ejs', { error: "Wrong credentials!" });
     }
 });
+
+
+// app.get('/addFood', async req(res))
+// {
+//     keep working on this. so yo ucan access the page
+// }
+
+app.post('/addFood', async (req, res) => {
+    const { dateFood, insertFood } = req.body;
+
+    const sql = "INSERT INTO foodData (date, food) VALUES (?, ?)";
+    await conn.query(sql, [dateFood, insertFood]);
+
+    res.render("addFood", { message: "Food added!", foodList: rows });
+});
+
+
 
 // Start the server
 app.listen(3000, () => {
