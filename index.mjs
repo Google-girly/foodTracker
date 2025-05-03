@@ -42,6 +42,8 @@ app.get('/signUp', (req, res) => {
     res.render('signUp.ejs');  
 });
 
+
+
 // lets user sign up
 app.post('/signUp', async (req, res) => {
     const { firstName, lastName, userName, userPassword, age, gender, userPlan} = req.body;
@@ -88,11 +90,12 @@ app.post('/login', async (req, res) => {
     if (match) {
         req.session.userAuthenticated = true;
         req.session.userID = rows[0].userID;
-        res.render('addFood.ejs');
+        res.render('home.ejs');
     } else {
         res.render('login.ejs', { error: "Wrong credentials!" });
     }
 });
+
 
 
 app.get('/addFood', async (req, res) => {
@@ -116,6 +119,55 @@ app.post('/addFood', async (req, res) => {
     const [rows] = await conn.query("SELECT * FROM foodData");
 
     res.render("addFood", { message: "Food added!", foodList: rows });
+});
+
+app.get('/mealHistory', (req, res) => {
+    // Render the Meal History page with options for selecting Day, Week, or Month
+    res.render('mealHistory', { message: null });
+});
+
+app.post('/mealHistory', async (req, res) => {
+    const { timePeriod, selectedDate } = req.body;
+
+    let sql;
+    let params = [];
+    if (timePeriod === 'Day') {
+        sql = `SELECT * FROM Meal WHERE mealDate = ?`;
+        params = [selectedDate];
+    } else if (timePeriod === 'Week') {
+        sql = `SELECT * FROM Meal WHERE WEEK(mealDate) = WEEK(?) AND YEAR(mealDate) = YEAR(?)`;
+        params = [selectedDate, selectedDate];
+    } else if (timePeriod === 'Month') {
+        sql = `SELECT * FROM Meal WHERE MONTH(mealDate) = MONTH(?) AND YEAR(mealDate) = YEAR(?)`;
+        params = [selectedDate, selectedDate];
+    }
+
+    try {
+        const [meals] = await conn.query(sql, params);
+
+        // Group meals by category
+        const groupedMeals = {
+            Breakfast: [],
+            Lunch: [],
+            Dinner: []
+        };
+
+        meals.forEach(meal => {
+            if (meal.category && groupedMeals[meal.category]) {
+                groupedMeals[meal.category].push(meal);
+            }
+        });
+
+        // Render the meal history page and pass groupedMeals to the view
+        res.render('mealHistory', {
+            meals: groupedMeals, // Make sure this is being passed correctly
+            timePeriod,
+            selectedDate
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error fetching meal history');
+    }
 });
 
 

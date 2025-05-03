@@ -3,9 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Meal History</title>
 </head>
 <body>
-    MEAL HISTORY
+    <h1>Meal History</h1>
+
+    <!-- Form to select time period (Day, Week, Month) -->
+    <form action="/mealHistory" method="POST">
+        <label for="timePeriod">Select Time Period: </label>
+        <select name="timePeriod" id="timePeriod">
+            <option value="Day">Day</option>
+            <option value="Week">Week</option>
+            <option value="Month">Month</option>
+        </select>
+
+        <label for="selectedDate">Select Date: </label>
+        <input type="date" name="selectedDate" id="selectedDate" required>
+
+        <button type="submit">View Meals</button>
+    </form>
+
+    <!-- Display meals grouped by Breakfast, Lunch, and Dinner -->
+    <% if (meals) { %>
+        <h2>Meals for <%= timePeriod %> starting from <%= selectedDate %>:</h2>
+
+        <h3>Breakfast</h3>
+        <% if (meals.Breakfast.length > 0) { %>
+            <% meals.Breakfast.forEach(meal => { %>
+                <p><%= meal.meal %> - <%= meal.mealDate %></p>
+            <% }) %>
+        <% } else { %>
+            <p>No Breakfast meals found.</p>
+        <% } %>
+
+        <h3>Lunch</h3>
+        <% if (meals.Lunch.length > 0) { %>
+            <% meals.Lunch.forEach(meal => { %>
+                <p><%= meal.meal %> - <%= meal.mealDate %></p>
+            <% }) %>
+        <% } else { %>
+            <p>No Lunch meals found.</p>
+        <% } %>
+
+        <h3>Dinner</h3>
+        <% if (meals.Dinner.length > 0) { %>
+            <% meals.Dinner.forEach(meal => { %>
+                <p><%= meal.meal %> - <%= meal.mealDate %></p>
+            <% }) %>
+        <% } else { %>
+            <p>No Dinner meals found.</p>
+        <% } %>
+    <% } else { %>
+        <p>No meals found for the selected period.</p>
+    <% } %>
 </body>
 </html>
