@@ -1,6 +1,6 @@
 import express from 'express';
 import mysql from 'mysql2/promise';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import session from 'express-session';
 
 const app = express();
@@ -86,28 +86,38 @@ app.post('/login', async (req, res) => {
     const match = await bcrypt.compare(password, hashedPassword);
 
     if (match) {
-        // req.session.userAuthenticated = true;
-        // req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
-        res.render('home.ejs');
+        req.session.userAuthenticated = true;
+        req.session.userID = rows[0].userID;
+        res.render('addFood.ejs');
     } else {
         res.render('login.ejs', { error: "Wrong credentials!" });
     }
 });
 
 
-// app.get('/addFood', async req(res))
-// {
-//     keep working on this. so yo ucan access the page
-// }
+app.get('/addFood', async (req, res) => {
+    const [rows] = await conn.query("SELECT * FROM foodData");
+    res.render("addFood", { message: null, foodList: rows });
+});
 
 app.post('/addFood', async (req, res) => {
-    const { dateFood, insertFood } = req.body;
+    const { dateFood, insertFood, cat } = req.body;
 
-    const sql = "INSERT INTO foodData (date, food) VALUES (?, ?)";
-    await conn.query(sql, [dateFood, insertFood]);
+    if (!req.session.userAuthenticated) {
+        return res.render('login.ejs', { error: "Please log in first." });
+    }
+
+    const userID = req.session.userID;
+
+    const sql = "INSERT INTO Meal (userID, category, mealDate, meal) VALUES (?, ?, ?, ?)";
+    await conn.query(sql, [userID, cat, dateFood, insertFood]);
+
+    // Re-fetch food list after insertion
+    const [rows] = await conn.query("SELECT * FROM foodData");
 
     res.render("addFood", { message: "Food added!", foodList: rows });
 });
+
 
 
 
