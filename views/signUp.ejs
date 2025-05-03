@@ -3,33 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Sign Up</title>
 </head>
 <body>
     <form action="/signup" method="POST">
-        First Name:<input type="text" name="firstName" placeholder="First Name" required />
+        First Name: <input type="text" name="firstName" placeholder="First Name" required />
         <br>
         Last Name: <input type="text" name="lastName" placeholder="Last Name" required />
         <br>
 
-        Username: <input type="text" name="userName" placeholder="Username" required />
+        Username: <input type="text" name="username" placeholder="Username" required />
         <br>
 
-        Password: <input type="password" name="userPassword" placeholder="Password" required />
+        Password: <input type="password" name="password" placeholder="Password" required />
         <br>
 
         Age: <input type="number" name="age" placeholder="Age" required />
-        <!-- add weight -->
-         <br>
-        Gender: <input type="radio" id="genderRadio" name="gender" value="M">
-         <label for="gender">M</label><br>
-         <input type="radio" id="genderRadio" name="gender" value="F">
-         <label for="gender">F</label><br>
-         <br>
+        <br>
 
+        Gender:
+        <input type="radio" id="genderM" name="gender" value="M">
+        <label for="genderM">M</label>
+        <input type="radio" id="genderF" name="gender" value="F">
+        <label for="genderF">F</label>
+        <br><br>
 
         <button type="submit">Sign Up</button>
-      </form>
-      
+    </form>
+
+    <script src="/foodTracker/public/js/signUp.js"></script>
 </body>
 </html>

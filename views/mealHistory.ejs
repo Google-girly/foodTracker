@@ -6,55 +6,53 @@
     <title>Meal History</title>
 </head>
 <body>
-    <h1>Meal History</h1>
+    <h1>Meals for <%= date || "Select a date" %></h1>
 
-    <!-- Form to select time period (Day, Week, Month) -->
-    <form action="/mealHistory" method="POST">
-        <label for="timePeriod">Select Time Period: </label>
-        <select name="timePeriod" id="timePeriod">
-            <option value="Day">Day</option>
-            <option value="Week">Week</option>
-            <option value="Month">Month</option>
-        </select>
-
-        <label for="selectedDate">Select Date: </label>
-        <input type="date" name="selectedDate" id="selectedDate" required>
-
-        <button type="submit">View Meals</button>
+ 
+    
+    <form action="/mealHistory" method="GET">
+        <label for="date">Choose a date:</label>
+        <input type="date" id="date" name="date" required>
+        <button type="submit">Show Meals</button>
     </form>
 
-    <!-- Display meals grouped by Breakfast, Lunch, and Dinner -->
-    <% if (meals) { %>
-        <h2>Meals for <%= timePeriod %> starting from <%= selectedDate %>:</h2>
-
-        <h3>Breakfast</h3>
-        <% if (meals.Breakfast.length > 0) { %>
-            <% meals.Breakfast.forEach(meal => { %>
-                <p><%= meal.meal %> - <%= meal.mealDate %></p>
-            <% }) %>
-        <% } else { %>
-            <p>No Breakfast meals found.</p>
-        <% } %>
-
-        <h3>Lunch</h3>
-        <% if (meals.Lunch.length > 0) { %>
-            <% meals.Lunch.forEach(meal => { %>
-                <p><%= meal.meal %> - <%= meal.mealDate %></p>
-            <% }) %>
-        <% } else { %>
-            <p>No Lunch meals found.</p>
-        <% } %>
-
-        <h3>Dinner</h3>
-        <% if (meals.Dinner.length > 0) { %>
-            <% meals.Dinner.forEach(meal => { %>
-                <p><%= meal.meal %> - <%= meal.mealDate %></p>
-            <% }) %>
-        <% } else { %>
-            <p>No Dinner meals found.</p>
-        <% } %>
+    <!-- breakfast -->
+    <% if (meals.breakfast && meals.breakfast.length > 0) { %>
+        <h2>Breakfast</h2>
+        <ul>
+            <% meals.breakfast.forEach(meal => { %>
+                <li><%= meal.meal %></li>
+            <% }); %>
+        </ul>
     <% } else { %>
-        <p>No meals found for the selected period.</p>
+        <p>No breakfast meals found for this date.</p>
     <% } %>
+
+    <!-- lunch -->
+    <% if (meals.lunch && meals.lunch.length > 0) { %>
+        <h2>Lunch</h2>
+        <ul>
+            <% meals.lunch.forEach(meal => { %>
+                <li><%= meal.meal %> </li>
+            <% }); %>
+        </ul>
+    <% } else { %>
+        <p>No lunch meals found for this date.</p>
+    <% } %>
+
+    <!-- dinner -->
+    <% if (meals.dinner && meals.dinner.length > 0) { %>
+        <h2>Dinner</h2>
+        <ul>
+            <% meals.dinner.forEach(meal => { %>
+                <li><%= meal.meal %></li>
+            <% }); %>
+        </ul>
+    <% } else { %>
+        <p>No dinner meals found for this date.</p>
+    <% } %>
+
+
+    <a href="/home"><button>Home</button></a>
 </body>
 </html>

@@ -46,7 +46,7 @@ app.get('/signUp', (req, res) => {
 
 // lets user sign up
 app.post('/signUp', async (req, res) => {
-    const { firstName, lastName, userName, userPassword, age, gender, userPlan} = req.body;
+    const { firstName, lastName, userName, password, age, gender} = req.body;
 
     // Check if the username already exists in the database
     let sql = `SELECT * FROM userAccount WHERE userName = ?`;
@@ -58,11 +58,11 @@ app.post('/signUp', async (req, res) => {
     }
 
     // Hash the password before saving it
-    const hashedPassword = await bcrypt.hash(userPassword, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // insert the new user into the database
-    sql = `INSERT INTO userAccount (firstName, lastName, userName, userPassword, age, gender, userPlan) VALUES (?, ?, ?, ?,?,?,?)`;
-    const sqlParams = [firstName, lastName, userName, hashedPassword, age, gender, userPlan];
+    sql = `INSERT INTO userAccount (firstName, lastName, userName, userPassword, age, gender) VALUES (?, ?, ?, ?,?,?)`;
+    const sqlParams = [firstName, lastName, userName, hashedPassword, age, gender];
     await conn.query(sql, sqlParams);
 
 
@@ -115,61 +115,93 @@ app.post('/addFood', async (req, res) => {
     const sql = "INSERT INTO Meal (userID, category, mealDate, meal) VALUES (?, ?, ?, ?)";
     await conn.query(sql, [userID, cat, dateFood, insertFood]);
 
+    const [mealIDResult] = await conn.query("SELECT LAST_INSERT_ID() AS mealID");
+    const mealID = mealIDResult[0].mealID;
+    
+    console.log('mealID:', mealID); 
+
+
+    const mealHistorySQL = "INSERT INTO mealHistory(mealID, userID, meal, mealDate, category) VALUES(?,?,?,?,?)";
+    await conn.query(mealHistorySQL, [mealID, userID, insertFood, dateFood, cat]);
+ 
     // Re-fetch food list after insertion
     const [rows] = await conn.query("SELECT * FROM foodData");
 
     res.render("addFood", { message: "Food added!", foodList: rows });
 });
 
-app.get('/mealHistory', (req, res) => {
-    // Render the Meal History page with options for selecting Day, Week, or Month
-    res.render('mealHistory', { message: null });
-});
+app.get('/mealHistory', async (req, res) => {
+    const { date } = req.query;
 
-app.post('/mealHistory', async (req, res) => {
-    const { timePeriod, selectedDate } = req.body;
+    // If date is not provided, set it to an empty string or default message
+    const displayDate = date || '';
 
-    let sql;
-    let params = [];
-    if (timePeriod === 'Day') {
-        sql = `SELECT * FROM Meal WHERE mealDate = ?`;
-        params = [selectedDate];
-    } else if (timePeriod === 'Week') {
-        sql = `SELECT * FROM Meal WHERE WEEK(mealDate) = WEEK(?) AND YEAR(mealDate) = YEAR(?)`;
-        params = [selectedDate, selectedDate];
-    } else if (timePeriod === 'Month') {
-        sql = `SELECT * FROM Meal WHERE MONTH(mealDate) = MONTH(?) AND YEAR(mealDate) = YEAR(?)`;
-        params = [selectedDate, selectedDate];
+    if (!date) {
+        // If no date, show the form and message
+        return res.render('mealHistory', { message: "Date is required.", meals: { breakfast: [], lunch: [], dinner: [] }, date: displayDate });
     }
 
-    try {
-        const [meals] = await conn.query(sql, params);
+    // Query to get meals for the specified date, ordered by category
+    const [rows] = await conn.query(
+        "SELECT * FROM mealHistory WHERE mealDate = ? ORDER BY category ASC",
+        [date]
+    );
 
-        // Group meals by category
-        const groupedMeals = {
-            Breakfast: [],
-            Lunch: [],
-            Dinner: []
-        };
+    // Initialize an object to store meals by category
+    const meals = { breakfast: [], lunch: [], dinner: [] };
 
-        meals.forEach(meal => {
-            if (meal.category && groupedMeals[meal.category]) {
-                groupedMeals[meal.category].push(meal);
-            }
-        });
+    // Loop through the rows and classify meals based on category
+    rows.forEach(meal => {
+        if (meal.category.toLowerCase() === 'breakfast') {
+            meals.breakfast.push(meal);
+        } else if (meal.category.toLowerCase() === 'lunch') {
+            meals.lunch.push(meal);
+        } else if (meal.category.toLowerCase() === 'dinner') {
+            meals.dinner.push(meal);
+        }
+    });
 
-        // Render the meal history page and pass groupedMeals to the view
-        res.render('mealHistory', {
-            meals: groupedMeals, // Make sure this is being passed correctly
-            timePeriod,
-            selectedDate
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Error fetching meal history');
-    }
+    
+    // Render the mealHistory page with the meals and the selected date
+    res.render('mealHistory', { meals, date: displayDate });
 });
 
+
+
+
+
+
+// app.post('/mealHistory', async (req, res) => {
+//     app.get('/mealHistory', async (req, res) => {
+//     const { date } = req.query;
+
+//     if (!date) {
+//         return res.status(400).send("Date is required.");
+//     }
+
+//     try {
+//         // Query to get meals for the specified date
+//         const [rows] = await conn.query(
+//             "SELECT * FROM mealHistory WHERE mealDate = ? ORDER BY mealDate ASC",
+//             [date]
+//         );
+
+//         if (rows.length === 0) {
+//             return res.render('mealHistory', { message: "No meals found for this date." });
+//         }
+
+//         // Render the mealHistory page with the fetched rows
+//         res.render('mealHistory', { meals: rows, date: date });
+
+//     } catch (error) {
+//         console.error('Error querying mealHistory:', error);
+//         res.status(500).send("Error retrieving meal history.");
+//     }
+// });
+
+app.get('/home', (req, res) => {
+    res.render('home'); // Ensure the login.ejs file exists in your views folder
+});
 
 
 
