@@ -7,7 +7,8 @@ const app = express();
 
 // Set up the view engine to use EJS
 app.set('view engine', 'ejs');
-app.use(express.static('public'));
+app.use('/foodTracker/public', express.static('public'));
+
 app.set('trust proxy', 1); // trust first proxy
 
 app.use(session({
@@ -33,19 +34,19 @@ const conn = await pool.getConnection();
 // Routes
 
 // Serve the login page
-app.get('/', (req, res) => {
+app.get('/',  (req, res) => {
     res.render('login.ejs');
 });
 
 // Serve the sign-up page (GET request)
 app.get('/signUp', (req, res) => {
-    res.render('signUp.ejs');  
+    res.render('signUp.ejs', { error: null });
 });
 
 
 
 // lets user sign up
-app.post('/signUp', async (req, res) => {
+app.post('/signUp', isAuthenticated, async (req, res) => {
     const { firstName, lastName, userName, password, age, gender} = req.body;
 
     // Check if the username already exists in the database
@@ -53,11 +54,10 @@ app.post('/signUp', async (req, res) => {
     const [rows] = await conn.query(sql, [userName]);
 
     if (rows.length > 0) {
-        // username already exists
         return res.render('signUp.ejs', { error: "Username already taken!" });
     }
 
-    // Hash the password before saving it
+    
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // insert the new user into the database
@@ -98,12 +98,12 @@ app.post('/login', async (req, res) => {
 
 
 
-app.get('/addFood', async (req, res) => {
+app.get('/addFood',isAuthenticated, async (req, res) => {
     const [rows] = await conn.query("SELECT * FROM foodData");
     res.render("addFood", { message: null, foodList: rows });
 });
 
-app.post('/addFood', async (req, res) => {
+app.post('/addFood',isAuthenticated, async (req, res) => {
     const { dateFood, insertFood, cat } = req.body;
 
     if (!req.session.userAuthenticated) {
@@ -130,7 +130,7 @@ app.post('/addFood', async (req, res) => {
     res.render("addFood", { message: "Food added!", foodList: rows });
 });
 
-app.get('/mealHistory', async (req, res) => {
+app.get('/mealHistory', isAuthenticated, async (req, res) => {
     const { date } = req.query;
 
     // If date is not provided, set it to an empty string or default message
@@ -199,10 +199,27 @@ app.get('/mealHistory', async (req, res) => {
 //     }
 // });
 
-app.get('/home', (req, res) => {
+app.get('/home',  isAuthenticated, (req, res) => {
     res.render('home'); // Ensure the login.ejs file exists in your views folder
 });
 
+app.get('/logout', (req,res) =>{
+    req.session.destroy();
+    res.render('login.ejs')
+})
+
+
+function isAuthenticated(req,res,next)
+{
+    if (req.session.userAuthenticated)
+    {
+        next();
+    }
+    else
+    {
+        res.redirect("/");
+    }
+}
 
 
 // Start the server

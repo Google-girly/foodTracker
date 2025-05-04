@@ -11,19 +11,25 @@ window.onload = function () {
     }
 };
 
-// Form validation
-document.querySelector("form").addEventListener("submit", validateAuthor);
+document.querySelector("form").addEventListener("submit", function (event) {
+    const username = document.querySelector("input[name='username']").value;
+    const password = document.querySelector("input[name='password']").value;
 
-function validateAuthor(event) {
-    let username = document.querySelector("input[name='username']").value;
     let isValid = true;
 
-    if (username.length < 3) {
-        alert("Username should at least have 3 characters!");
+
+    if (username.trim() === "") {
+        alert("Username cannot be empty.");
         isValid = false;
     }
 
-    if (!isValid) {
-        event.preventDefault(); // stops the form from submitting
+    if (password.trim() === "") {
+        alert("Password cannot be empty.");
+        isValid = false;
     }
-}
+
+
+    if (!isValid) {
+        event.preventDefault();
+    }
+});
