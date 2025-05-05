@@ -43,7 +43,9 @@ app.get('/signUp', (req, res) => {
     res.render('signUp.ejs', { error: null });
 });
 
-
+app.get('/foodSearch', (req, res) => {
+    res.render('foodSearch.ejs');
+});
 
 // lets user sign up
 app.post('/signUp', isAuthenticated, async (req, res) => {
