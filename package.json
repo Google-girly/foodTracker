@@ -8,12 +8,21 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "The food/Calorie Tracker is an app that allows users to input their daily meals to monitor their calories. They would be able to add, update, and view meals. We would use APIs to pull food and calorie information.",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "mysql2": "^3.14.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Google-girly/foodTracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Google-girly/foodTracker/issues"
+  },
+  "homepage": "https://github.com/Google-girly/foodTracker#readme"
 }
