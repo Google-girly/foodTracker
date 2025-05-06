@@ -174,28 +174,30 @@ app.get('/mealHistory', async (req, res) => {
 });
 
 app.post('/updateMeal', isAuthenticated, async (req, res) => {
-    const { mealID, updatedMeal, updatedCategory, date } = req.body;
+    const { mealID, updatedMeal, updatedCategory, updatedDate, currentDate } = req.body;
     const userID = req.session.userID;
   
-    const [rows] = await conn.query("SELECT * FROM mealHistory WHERE mealID = ? AND userID = ?", [mealID, userID]);
+    const [rows] = await conn.query(
+      "SELECT * FROM mealHistory WHERE mealID = ? AND userID = ?",
+      [mealID, userID]
+    );
     if (rows.length === 0) {
       return res.status(403).send("Unauthorized or meal not found.");
     }
   
-    await conn.query(`
-      UPDATE mealHistory
-      SET meal = ?, category = ?
-      WHERE mealID = ? AND userID = ?
-    `, [updatedMeal, updatedCategory, mealID, userID]);
+    await conn.query(
+      "UPDATE mealHistory SET meal = ?, category = ?, mealDate = ? WHERE mealID = ? AND userID = ?",
+      [updatedMeal, updatedCategory, updatedDate, mealID, userID]
+    );
   
-    await conn.query(`
-      UPDATE Meal
-      SET meal = ?, category = ?
-      WHERE mealID = ? AND userID = ?
-    `, [updatedMeal, updatedCategory, mealID, userID]);
+    await conn.query(
+      "UPDATE Meal SET meal = ?, category = ?, mealDate = ? WHERE mealID = ? AND userID = ?",
+      [updatedMeal, updatedCategory, updatedDate, mealID, userID]
+    );
   
-    res.redirect(`/mealHistory?date=${date}`);
+    res.redirect(`/mealHistory?date=${currentDate}`);
   });
+  
   
 
 
