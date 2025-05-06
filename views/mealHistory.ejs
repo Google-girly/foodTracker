@@ -28,23 +28,22 @@
             <strong><%= meal.meal %></strong>
             <div class="nutrition-info">Loading nutrition...</div>
 
-            <!-- Update Form -->
             <form action="/updateMeal" method="POST" style="display:inline;">
-              <input type="hidden" name="mealID" value="<%= meal.mealID %>">
-              <input type="hidden" name="date" value="<%= date %>">
+                <input type="hidden" name="mealID" value="<%= meal.mealID %>">
+                <input type="hidden" name="date" value="<%= date %>">
+              
+                <input type="text" name="updatedMeal" value="<%= meal.meal %>" required>
+              
+                <select name="updatedCategory" required>
+                  <option value="Breakfast" <%= meal.category === 'Breakfast' ? 'selected' : '' %>>Breakfast</option>
+                  <option value="Lunch" <%= meal.category === 'Lunch' ? 'selected' : '' %>>Lunch</option>
+                  <option value="Dinner" <%= meal.category === 'Dinner' ? 'selected' : '' %>>Dinner</option>
+                </select>
+              
+                <button type="submit">Update</button>
+              </form>
+              
 
-            
-
-              <select name="updatedCategory" required>
-                <option value="Breakfast" <%= meal.category === 'Breakfast' ? 'selected' : '' %>>Breakfast</option>
-                <option value="Lunch" <%= meal.category === 'Lunch' ? 'selected' : '' %>>Lunch</option>
-                <option value="Dinner" <%= meal.category === 'Dinner' ? 'selected' : '' %>>Dinner</option>
-              </select>
-
-              <button type="submit">Update</button>
-            </form>
-
-            <!-- Delete Form -->
             <form action="/deleteMeal" method="POST" style="display:inline;">
               <input type="hidden" name="mealID" value="<%= meal.mealID %>">
               <input type="hidden" name="date" value="<%= date %>">
