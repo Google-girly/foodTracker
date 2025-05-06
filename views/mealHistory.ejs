@@ -1,59 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meal History</title>
+  <meta charset="UTF-8">
+  <title>Meal History</title>
+  <link rel="stylesheet" href="/foodTracker/public/style.css">
 </head>
 <body>
-    <h1>Meals for <%= date || "Select a date" %></h1>
+  <h1>Meals for: <%= date %></h1>
 
- 
-    
-    <form action="/mealHistory" method="GET">
-        <label for="date">Choose a date:</label>
-        <input type="date" id="date" name="date" required>
-        <button type="submit">Show Meals</button>
-    </form>
+  <!-- Date Picker -->
+  <form action="/mealHistory" method="GET">
+    <label for="date">Choose a date:</label>
+    <input type="date" id="date" name="date" value="<%= date %>" required>
+    <button type="submit">Show Meals</button>
+  </form>
 
-    <!-- breakfast -->
-    <% if (meals.breakfast && meals.breakfast.length > 0) { %>
-        <h2>Breakfast</h2>
-        <ul>
-            <% meals.breakfast.forEach(meal => { %>
-                <li><%= meal.meal %></li>
-            <% }); %>
-        </ul>
+  <hr>
+
+  <% ['breakfast', 'lunch', 'dinner'].forEach(type => { %>
+    <h2><%= type.charAt(0).toUpperCase() + type.slice(1) %></h2>
+    <% if (meals[type] && meals[type].length > 0) { %>
+      <% meals[type].sort((a, b) => a.category.localeCompare(b.category)); %>
+      <ul>
+        <% meals[type].forEach(meal => { %>
+          <li class="meal-item"
+              data-mealname="<%= meal.meal %>"
+              data-mealtype="<%= type.charAt(0).toUpperCase() + type.slice(1) %>">
+
+            <!-- Editable Meal Name, Category, and Date -->
+            <form action="/updateMeal" method="POST" style="display:inline;">
+              <input type="hidden" name="mealID" value="<%= meal.mealID %>">
+              <input type="hidden" name="currentDate" value="<%= date %>">
+
+              <input type="text" name="updatedMeal" value="<%= meal.meal %>" required>
+
+              <select name="updatedCategory" required>
+  <% const categories = ['Breakfast', 'Lunch', 'Dinner']; %>
+  <% for (let i = 0; i < categories.length; i++) { %>
+    <% if (meal.category === categories[i]) { %>
+      <option value="<%= categories[i] %>" selected><%= categories[i] %></option>
     <% } else { %>
-        <p>No breakfast meals found for this date.</p>
+      <option value="<%= categories[i] %>"><%= categories[i] %></option>
     <% } %>
+  <% } %>
+</select>
 
-    <!-- lunch -->
-    <% if (meals.lunch && meals.lunch.length > 0) { %>
-        <h2>Lunch</h2>
-        <ul>
-            <% meals.lunch.forEach(meal => { %>
-                <li><%= meal.meal %> </li>
-            <% }); %>
-        </ul>
+<input type="date" name="updatedDate" value="<%= meal.mealDate.toISOString().slice(0, 10) %>">
+              <button type="submit" name="action" value="update">Update</button>
+            </form>
+
+            <!-- Nutrition info -->
+            <div class="nutrition-info">Loading nutrition...</div>
+
+            <!-- Delete Form -->
+            <form action="/deleteMeal" method="POST" style="display:inline;">
+              <input type="hidden" name="mealID" value="<%= meal.mealID %>">
+              <input type="hidden" name="date" value="<%= date %>">
+              <button type="submit">Delete</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
     <% } else { %>
-        <p>No lunch meals found for this date.</p>
+      <p>No <%= type %> meals found for this date.</p>
     <% } %>
+  <% }); %>
 
-    <!-- dinner -->
-    <% if (meals.dinner && meals.dinner.length > 0) { %>
-        <h2>Dinner</h2>
-        <ul>
-            <% meals.dinner.forEach(meal => { %>
-                <li><%= meal.meal %></li>
-            <% }); %>
-        </ul>
-    <% } else { %>
-        <p>No dinner meals found for this date.</p>
-    <% } %>
+  <hr>
 
+  <h3>Meal Nutrition Breakdown</h3>
+  <table id="mealHistoryTable" border="1">
+    <tr>
+      <th>Meal Type</th>
+      <th>Food</th>
+      <th>Calories</th>
+      <th>Cholesterol</th>
+      <th>Fiber</th>
+      <th>Potassium</th>
+      <th>Protein</th>
+      <th>Sodium</th>
+      <th>Sugars</th>
+      <th>Fat</th>
+      <th>Carbs</th>
+    </tr>
+  </table>
 
-    <a href="/home"><button>Home</button></a>
-    <a href="/logout"><button>Logout</button></a>
+  <h3>Total Calories by Meal</h3>
+  <ul>
+    <li>Breakfast: <span id="breakfastTotal">0</span></li>
+    <li>Lunch: <span id="lunchTotal">0</span></li>
+    <li>Dinner: <span id="dinnerTotal">0</span></li>
+  </ul>
+
+  <br>
+  <a href="/home"><button>Home</button></a>
+  <a href="/logout"><button>Logout</button></a>
+
+  <script>
+    const mealItems = document.querySelectorAll('.meal-item');
+    let totals = { Breakfast: 0, Lunch: 0, Dinner: 0 };
+
+    mealItems.forEach(item => {
+      let foodName = item.dataset.mealname;
+      let mealType = item.dataset.mealtype;
+      let nutritionDiv = item.querySelector('.nutrition-info');
+
+      fetch('https://trackapi.nutritionix.com/v2/natural/nutrients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-app-id': '3b4cc9c0',
+          'x-app-key': '962140f8e8d0de29390218b734440410'
+        },
+        body: JSON.stringify({ query: foodName })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const food = data.foods[0];
+
+        const scaled = {
+          calories: food.nf_calories,
+          cholesterol: food.nf_cholesterol,
+          fiber: food.nf_dietary_fiber,
+          potassium: food.nf_potassium,
+          protein: food.nf_protein,
+          sodium: food.nf_sodium,
+          sugars: food.nf_sugars,
+          fat: food.nf_total_fat,
+          carbs: food.nf_total_carbohydrate
+        };
+
+        nutritionDiv.textContent =
+          `Calories: ${scaled.calories.toFixed(1)} | Protein: ${scaled.protein.toFixed(1)}g | Carbs: ${scaled.carbs.toFixed(1)}g | Fat: ${scaled.fat.toFixed(1)}g`;
+
+        let row = document.getElementById("mealHistoryTable").insertRow();
+        row.insertCell(0).textContent = mealType;
+        row.insertCell(1).textContent = food.food_name;
+        row.insertCell(2).textContent = scaled.calories.toFixed(1);
+        row.insertCell(3).textContent = scaled.cholesterol.toFixed(1);
+        row.insertCell(4).textContent = scaled.fiber.toFixed(1);
+        row.insertCell(5).textContent = scaled.potassium.toFixed(1);
+        row.insertCell(6).textContent = scaled.protein.toFixed(1);
+        row.insertCell(7).textContent = scaled.sodium.toFixed(1);
+        row.insertCell(8).textContent = scaled.sugars.toFixed(1);
+        row.insertCell(9).textContent = scaled.fat.toFixed(1);
+        row.insertCell(10).textContent = scaled.carbs.toFixed(1);
+
+        totals[mealType] += scaled.calories;
+        document.getElementById(mealType.toLowerCase() + "Total").textContent = totals[mealType].toFixed(1);
+      })
+      .catch(err => {
+        nutritionDiv.textContent = 'Nutrition data unavailable';
+        console.error('Nutritionix error:', err);
+      });
+    });
+  </script>
 </body>
 </html>
