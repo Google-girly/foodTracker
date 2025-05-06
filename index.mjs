@@ -130,98 +130,6 @@ app.post('/addFood',isAuthenticated, async (req, res) => {
     res.render("addFood", { message: "Food added!", foodList: rows });
 });
 
-app.get('/mealHistory', isAuthenticated, async (req, res) => {
-    const { date } = req.query;
-
-    // If date is not provided, set it to an empty string or default message
-    const displayDate = date || '';
-
-    if (!date) {
-        // If no date, show the form and message
-        return res.render('mealHistory', { message: "Date is required.", meals: { breakfast: [], lunch: [], dinner: [] }, date: displayDate });
-    }
-
-    // Query to get meals for the specified date, ordered by category
-    const [rows] = await conn.query(
-        "SELECT * FROM mealHistory WHERE mealDate = ? ORDER BY category ASC",
-        [date]
-    );
-
-    // Initialize an object to store meals by category
-    const meals = { breakfast: [], lunch: [], dinner: [] };
-
-    // Loop through the rows and classify meals based on category
-    rows.forEach(meal => {
-        if (meal.category.toLowerCase() === 'breakfast') {
-            meals.breakfast.push(meal);
-        } else if (meal.category.toLowerCase() === 'lunch') {
-            meals.lunch.push(meal);
-        } else if (meal.category.toLowerCase() === 'dinner') {
-            meals.dinner.push(meal);
-        }
-    });
-
-    
-    // Render the mealHistory page with the meals and the selected date
-    res.render('mealHistory', { meals, date: displayDate });
-});
-
-
-
-
-
-
-// app.post('/mealHistory', async (req, res) => {
-//     app.get('/mealHistory', async (req, res) => {
-//     const { date } = req.query;
-
-//     if (!date) {
-//         return res.status(400).send("Date is required.");
-//     }
-
-//     try {
-//         // Query to get meals for the specified date
-//         const [rows] = await conn.query(
-//             "SELECT * FROM mealHistory WHERE mealDate = ? ORDER BY mealDate ASC",
-//             [date]
-//         );
-
-//         if (rows.length === 0) {
-//             return res.render('mealHistory', { message: "No meals found for this date." });
-//         }
-
-//         // Render the mealHistory page with the fetched rows
-//         res.render('mealHistory', { meals: rows, date: date });
-
-//     } catch (error) {
-//         console.error('Error querying mealHistory:', error);
-//         res.status(500).send("Error retrieving meal history.");
-//     }
-// });
-
-app.get('/home',  isAuthenticated, (req, res) => {
-    res.render('home'); // Ensure the login.ejs file exists in your views folder
-});
-
-app.get('/logout', (req,res) =>{
-    req.session.destroy();
-    res.render('login.ejs')
-})
-
-
-function isAuthenticated(req,res,next)
-{
-    if (req.session.userAuthenticated)
-    {
-        next();
-    }
-    else
-    {
-        res.redirect("/");
-    }
-}
-
-
 app.get('/mealHistory', async (req, res) => {
     let { date } = req.query;
 
@@ -279,8 +187,6 @@ app.post('/updateMeal', isAuthenticated, async (req, res) => {
     res.redirect(`/mealHistory?date=${currentDate}`);
   });
   
-  
-
 
 
 app.post('/deleteMeal', async (req, res) => {
@@ -315,6 +221,28 @@ app.post('/mealHistory', async (req, res) => {
 
     res.redirect(`/mealHistory?date=${date}`);
 });
+
+app.get('/home',  isAuthenticated, (req, res) => {
+    res.render('home'); // Ensure the login.ejs file exists in your views folder
+});
+
+app.get('/logout', (req,res) =>{
+    req.session.destroy();
+    res.render('login.ejs')
+})
+
+
+function isAuthenticated(req,res,next)
+{
+    if (req.session.userAuthenticated)
+    {
+        next();
+    }
+    else
+    {
+        res.redirect("/");
+    }
+}
 
 // Start the server
 app.listen(3000, () => {
