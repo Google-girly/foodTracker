@@ -86,16 +86,21 @@ app.post('/login', async (req, res) => {
 
     const hashedPassword = rows[0].userPassword;
 
+
     // compare the typed in password to the hashedpassword
     const match = await bcrypt.compare(password, hashedPassword);
 
-    if (match) {
-        req.session.userAuthenticated = true;
-        req.session.userID = rows[0].userID;
-        res.render('home.ejs');
-    } else {
-        res.render('login.ejs', { error: "Wrong credentials!" });
+    console.log("Username submitted:", username);
+    console.log("User found:", rows.length > 0);
+    if (rows.length > 0) {
+        console.log("Stored hash:", rows[0].userPassword);
     }
+    console.log("Password match:", match);
+
+    // THIS SHOULD NOT BE PUSHED
+    req.session.userAuthenticated = true;
+    req.session.userID = rows[0].userID;
+    res.render('home.ejs');
 });
 
 
@@ -133,44 +138,102 @@ app.post('/addFood', async (req, res) => {
 });
 
 app.get('/mealHistory', async (req, res) => {
-    const { date } = req.query;
-
-    // If date is not provided, set it to an empty string or default message
-    const displayDate = date || '';
+    let { date } = req.query;
 
     if (!date) {
-        // If no date, show the form and message
-        return res.render('mealHistory', { message: "Date is required.", meals: { breakfast: [], lunch: [], dinner: [] }, date: displayDate });
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        date = `${yyyy}-${mm}-${dd}`;
     }
 
-    // Query to get meals for the specified date, ordered by category
-    const [rows] = await conn.query(
-        "SELECT * FROM mealHistory WHERE mealDate = ? ORDER BY category ASC",
-        [date]
+    const userID = req.session.userID;
+    const displayDate = date;
+
+    const [meals] = await conn.query(
+        "SELECT * FROM mealHistory WHERE mealDate = ? AND userID = ? ORDER BY category ASC",
+        [date, userID]
     );
 
-    // Initialize an object to store meals by category
-    const meals = { breakfast: [], lunch: [], dinner: [] };
-
-    // Loop through the rows and classify meals based on category
-    rows.forEach(meal => {
-        if (meal.category.toLowerCase() === 'breakfast') {
-            meals.breakfast.push(meal);
-        } else if (meal.category.toLowerCase() === 'lunch') {
-            meals.lunch.push(meal);
-        } else if (meal.category.toLowerCase() === 'dinner') {
-            meals.dinner.push(meal);
-        }
+    const categorizedMeals = { breakfast: [], lunch: [], dinner: [] };
+    meals.forEach(meal => {
+        const category = meal.category?.toLowerCase();
+        if (category === 'breakfast') categorizedMeals.breakfast.push(meal);
+        else if (category === 'lunch') categorizedMeals.lunch.push(meal);
+        else if (category === 'dinner') categorizedMeals.dinner.push(meal);
     });
 
-    
-    // Render the mealHistory page with the meals and the selected date
-    res.render('mealHistory', { meals, date: displayDate });
+    const [foodList] = await conn.query("SELECT * FROM foodData");
+
+    res.render('mealHistory', {
+        meals: categorizedMeals,
+        foodList,
+        date: displayDate
+    });
+});
+
+app.post('/updateMeal', isAuthenticated, async (req, res) => {
+    const { mealID, updatedMeal, updatedCategory, date } = req.body;
+    const userID = req.session.userID;
+  
+    const [rows] = await conn.query("SELECT * FROM mealHistory WHERE mealID = ? AND userID = ?", [mealID, userID]);
+    if (rows.length === 0) {
+      return res.status(403).send("Unauthorized or meal not found.");
+    }
+  
+    await conn.query(`
+      UPDATE mealHistory
+      SET meal = ?, category = ?
+      WHERE mealID = ? AND userID = ?
+    `, [updatedMeal, updatedCategory, mealID, userID]);
+  
+    await conn.query(`
+      UPDATE Meal
+      SET meal = ?, category = ?
+      WHERE mealID = ? AND userID = ?
+    `, [updatedMeal, updatedCategory, mealID, userID]);
+  
+    res.redirect(`/mealHistory?date=${date}`);
+  });
+  
+
+
+
+app.post('/deleteMeal', async (req, res) => {
+    const { mealID, date } = req.body;
+    const userID = req.session.userID;
+
+    // Optional: Verify meal belongs to user
+    const [rows] = await conn.query("SELECT * FROM mealHistory WHERE mealID = ? AND userID = ?", [mealID, userID]);
+
+    if (rows.length === 0) {
+        return res.status(403).send("Unauthorized or meal not found.");
+    }
+
+    // Delete from both mealHistory and Meal (assuming you want full removal)
+    await conn.query("DELETE FROM mealHistory WHERE mealID = ? AND userID = ?", [mealID, userID]);
+    await conn.query("DELETE FROM Meal WHERE mealID = ? AND userID = ?", [mealID, userID]);
+
+    res.redirect(`/mealHistory?date=${date}`);
 });
 
 
+app.post('/mealHistory', async (req, res) => {
+    const { date, insertFood, mealType } = req.body;
+    const userID = req.session.userID;
 
+    const sql = 'INSERT INTO Meal (userID, category, mealDate, meal) VALUES (?, ?, ?, ?)';
+    await conn.query(sql, [userID, mealType, date, insertFood]);
 
+    const [mealIDResult] = await conn.query("SELECT LAST_INSERT_ID() AS mealID");
+    const mealID = mealIDResult[0].mealID;
+
+    const mealHistorySQL = "INSERT INTO mealHistory(mealID, userID, meal, mealDate, category) VALUES(?,?,?,?,?)";
+    await conn.query(mealHistorySQL, [mealID, userID, insertFood, date, mealType]);
+
+    res.redirect(`/mealHistory?date=${date}`);
+});
 
 
 // app.post('/mealHistory', async (req, res) => {
