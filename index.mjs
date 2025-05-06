@@ -166,11 +166,7 @@ app.get('/mealHistory', async (req, res) => {
 
     const [foodList] = await conn.query("SELECT * FROM foodData");
 
-    res.render('mealHistory', {
-        meals: categorizedMeals,
-        foodList,
-        date: displayDate
-    });
+    res.render('mealHistory', {meals: categorizedMeals, foodList, date: displayDate});
 });
 
 app.post('/updateMeal', isAuthenticated, async (req, res) => {
@@ -198,22 +194,18 @@ app.post('/updateMeal', isAuthenticated, async (req, res) => {
     res.redirect(`/mealHistory?date=${currentDate}`);
   });
   
-  
-
 
 
 app.post('/deleteMeal', async (req, res) => {
     const { mealID, date } = req.body;
     const userID = req.session.userID;
 
-    // Optional: Verify meal belongs to user
     const [rows] = await conn.query("SELECT * FROM mealHistory WHERE mealID = ? AND userID = ?", [mealID, userID]);
 
     if (rows.length === 0) {
         return res.status(403).send("Unauthorized or meal not found.");
     }
 
-    // Delete from both mealHistory and Meal (assuming you want full removal)
     await conn.query("DELETE FROM mealHistory WHERE mealID = ? AND userID = ?", [mealID, userID]);
     await conn.query("DELETE FROM Meal WHERE mealID = ? AND userID = ?", [mealID, userID]);
 
@@ -237,35 +229,6 @@ app.post('/mealHistory', async (req, res) => {
     res.redirect(`/mealHistory?date=${date}`);
 });
 
-
-// app.post('/mealHistory', async (req, res) => {
-//     app.get('/mealHistory', async (req, res) => {
-//     const { date } = req.query;
-
-//     if (!date) {
-//         return res.status(400).send("Date is required.");
-//     }
-
-//     try {
-//         // Query to get meals for the specified date
-//         const [rows] = await conn.query(
-//             "SELECT * FROM mealHistory WHERE mealDate = ? ORDER BY mealDate ASC",
-//             [date]
-//         );
-
-//         if (rows.length === 0) {
-//             return res.render('mealHistory', { message: "No meals found for this date." });
-//         }
-
-//         // Render the mealHistory page with the fetched rows
-//         res.render('mealHistory', { meals: rows, date: date });
-
-//     } catch (error) {
-//         console.error('Error querying mealHistory:', error);
-//         res.status(500).send("Error retrieving meal history.");
-//     }
-// });
-
 app.get('/home', (req, res) => {
     res.render('home'); 
 });
@@ -287,7 +250,6 @@ function isAuthenticated(req,res,next)
         res.redirect("/");
     }
 }
-
 
 // Start the server
 app.listen(3000, () => {
