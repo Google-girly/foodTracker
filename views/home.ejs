@@ -40,7 +40,6 @@
 
 <script>
   async function fetchQuote() {
-    try {
       let url = "https://api.api-ninjas.com/v1/quotes";
       let response = await fetch(url, {
         method: "GET",
@@ -50,19 +49,11 @@
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
       let data = await response.json();
-      let quoteData = data[0]; // API Ninjas returns an array
+      let quoteData = data[0];
 
       console.log(data);
-
       document.getElementById("quote").innerHTML = `"${quoteData.quote}"<br><em>— ${quoteData.author}</em>`;
-    } catch (error) {
-      console.error("Failed to fetch quote:", error);
-    }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
