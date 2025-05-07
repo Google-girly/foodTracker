@@ -19,14 +19,13 @@
 
     <section class="overview">
       <h2>Today's Snapshot</h2>
-      <p>Date: <%= new Date().toLocaleDateString() %></p>
-      <p>Total Calories Today: <%= totalCalories %> kcal</p>
-
-
+      <p>📅 Date: <%= new Date().toLocaleDateString() %></p>
+      <p>🍽️ Meals logged: —</p>
+      <p>🔥 Calories today: —</p>
     </section>
 
 
-    <p class="quote-author" id="author"></p>
+    <div class="quote-author" id="quote"> hellooooo</div>
 
     <button id="new-quote" class="nav-button">🔁 New Quote</button>
 
@@ -36,30 +35,38 @@
   </div>
 
 <script>
-  async function data() {
-      const res = await fetch('/quote');
-      const data = await res.json();
+  async function fetchQuote() {
+    try {
+      let url = "https://api.api-ninjas.com/v1/quotes";
+      let response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "X-Api-Key": "e55ujx2dKBr8MTVnweDo6CP6w2M7kimIyHvAvyJE",
+          "Content-Type": "application/json"
+        }
+      });
 
-      consol.log(data);
-      // document.getElementById('quote').textContent = `"${data.q}"`;
-      // document.getElementById('author').textContent = `— ${data.a}`;
-   
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      let data = await response.json();
+      let quoteData = data[0]; // API Ninjas returns an array
+
+      console.log(data);
+
+      document.getElementById("quote").innerHTML = `"${quoteData.quote}"<br><em>— ${quoteData.author}</em>`;
+    } catch (error) {
+      console.error("Failed to fetch quote:", error);
+    }
   }
-  async function fetchQuote(){
 
-  let url = "https://zenquotes.io/api/random";
-
-  let response = await fetch(url);
-  let data = await response.json()
-  console.log(data);
-
-}
-
-  
-
-  window.addEventListener('DOMContentLoaded', fetchQuote);
-  document.getElementById('new-quote').addEventListener('click', fetchQuote);
+  window.addEventListener('DOMContentLoaded', () => {
+    fetchQuote();
+    document.getElementById('new-quote').addEventListener('click', fetchQuote);
+  });
 </script>
+
 
 </body>
 </html>
