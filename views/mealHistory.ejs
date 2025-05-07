@@ -17,6 +17,13 @@
 
   <hr>
 
+  <h3>Total Calories by Meal</h3>
+  <ul>
+    <li>Breakfast: <span id="breakfastTotal">0</span></li>
+    <li>Lunch: <span id="lunchTotal">0</span></li>
+    <li>Dinner: <span id="dinnerTotal">0</span></li>
+  </ul>
+<hr>
   <% ['breakfast', 'lunch', 'dinner'].forEach(type => { %>
     <h2><%= type.charAt(0).toUpperCase() + type.slice(1) %></h2>
     <% if (meals[type] && meals[type].length > 0) { %>
@@ -56,7 +63,7 @@
             <form action="/deleteMeal" method="POST" style="display:inline;">
               <input type="hidden" name="mealID" value="<%= meal.mealID %>">
               <input type="hidden" name="date" value="<%= date %>">
-              <button type="submit">Delete</button>
+              <button type="submit">Delete</bu tton>
             </form>
           </li>
         <% }); %>
@@ -85,12 +92,7 @@
     </tr>
   </table>
 
-  <h3>Total Calories by Meal</h3>
-  <ul>
-    <li>Breakfast: <span id="breakfastTotal">0</span></li>
-    <li>Lunch: <span id="lunchTotal">0</span></li>
-    <li>Dinner: <span id="dinnerTotal">0</span></li>
-  </ul>
+  
 
   <br>
   <a href="/home"><button>Home</button></a>

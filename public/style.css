@@ -87,12 +87,16 @@
     }
 
     a button {
-      background-color: #6c757d;
-      margin-right: 10px;
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
     a button:hover {
-      background-color: #5a6268;
+      background-color: #0056b3;
     }
 
     #mealHistoryTable {
