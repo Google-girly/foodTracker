@@ -1,15 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <title>Home - Food Tracker</title>
+  <link rel="stylesheet" href="/foodTracker/public/home.css">
 </head>
 <body>
-    HOME
+  <div class="container">
+    <header>
+      <h1>🍎 Welcome to Your Food Tracker</h1>
+    </header>
 
-    <a href="/addFood"><button>Add Food</button></a>
-    <a href = "/mealHistory"><button>Meal History</button></a>
-    <a href="/logout"><button>Logout</button></a>
+    <nav>
+      <a href="/addFood" class="nav-button">Log a Meal</a>
+      <a href="/mealHistory" class="nav-button">View Meal History</a>
+      <a href="logout" class="nav-button">Logout</a>
+    </nav>
+
+    <section class="overview">
+      <h2>Today's Snapshot</h2>
+<<<<<<< HEAD
+      <p>Date: <%= new Date().toLocaleDateString() %></p>
+      <p>Total Calories Today: <%= totalCalories %> kcal</p>
+
+
+=======
+      <p>📅 Date: <%= new Date().toLocaleDateString() %></p>
+      <p>🍽️ Meals logged: —</p>
+      <p>🔥 Calories today: —</p>
+>>>>>>> 5080a3a16b9f16495c644bcee93d71c0b7dad7b2
+    </section>
+
+
+    <p class="quote-author" id="author"></p>
+
+    <button id="new-quote" class="nav-button">🔁 New Quote</button>
+
+    <footer>
+      &copy; 2025 Food Tracker App
+    </footer>
+  </div>
+
+<script>
+  async function data() {
+      const res = await fetch('/quote');
+      const data = await res.json();
+
+      consol.log(data);
+      // document.getElementById('quote').textContent = `"${data.q}"`;
+      // document.getElementById('author').textContent = `— ${data.a}`;
+   
+  }
+  async function fetchQuote(){
+
+  let url = "https://zenquotes.io/api/random";
+
+  let response = await fetch(url);
+  let data = await response.json()
+  console.log(data);
+
+}
+
+  
+
+  window.addEventListener('DOMContentLoaded', fetchQuote);
+  document.getElementById('new-quote').addEventListener('click', fetchQuote);
+</script>
+
 </body>
 </html>

@@ -2,6 +2,7 @@ import express from 'express';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 import session from 'express-session';
+import fetch from 'node-fetch';
 
 const app = express();
 
@@ -38,12 +39,14 @@ app.get('/',  (req, res) => {
     res.render('login.ejs');
 });
 
-// Serve the sign-up page (GET request)
+
 app.get('/signUp', (req, res) => {
     res.render('signUp.ejs', { error: null });
 });
 
-
+app.get('/foodSearch', (req, res) => {
+    res.render('foodSearch.ejs');
+});
 
 // lets user sign up
 app.post('/signUp', isAuthenticated, async (req, res) => {
@@ -84,26 +87,31 @@ app.post('/login', async (req, res) => {
 
     const hashedPassword = rows[0].userPassword;
 
+
     // compare the typed in password to the hashedpassword
     const match = await bcrypt.compare(password, hashedPassword);
 
-    if (match) {
-        req.session.userAuthenticated = true;
-        req.session.userID = rows[0].userID;
-        res.render('home.ejs');
-    } else {
-        res.render('login.ejs', { error: "Wrong credentials!" });
+    console.log("Username submitted:", username);
+    console.log("User found:", rows.length > 0);
+    if (rows.length > 0) {
+        console.log("Stored hash:", rows[0].userPassword);
     }
+    console.log("Password match:", match);
+
+    
+    req.session.userAuthenticated = true;
+    req.session.userID = rows[0].userID;
+    res.render('home.ejs', { totalCalories: 0 });  
 });
 
 
 
-app.get('/addFood',isAuthenticated, async (req, res) => {
+app.get('/addFood', async (req, res) => {
     const [rows] = await conn.query("SELECT * FROM foodData");
     res.render("addFood", { message: null, foodList: rows });
 });
 
-app.post('/addFood',isAuthenticated, async (req, res) => {
+app.post('/addFood', async (req, res) => {
     const { dateFood, insertFood, cat } = req.body;
 
     if (!req.session.userAuthenticated) {
@@ -222,8 +230,44 @@ app.post('/mealHistory', async (req, res) => {
     res.redirect(`/mealHistory?date=${date}`);
 });
 
-app.get('/home',  isAuthenticated, (req, res) => {
-    res.render('home'); // Ensure the login.ejs file exists in your views folder
+app.get('/home', isAuthenticated, async (req, res) => {
+    const userID = req.session.userID;
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const date = `${yyyy}-${mm}-${dd}`;
+
+
+    const [meals] = await conn.query(
+        "SELECT meal FROM mealHistory WHERE mealDate = ? AND userID = ?",
+        [date, userID]
+    );
+
+    let totalCalories = 0;
+
+    for (const meal of meals) {
+        const foodName = meal.meal;
+
+        const response = await fetch("https://trackapi.nutritionix.com/v2/natural/nutrients", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-app-id": "3b4cc9c0",
+                "x-app-key": "962140f8e8d0de29390218b734440410"
+            },
+            body: JSON.stringify({ query: foodName })
+        });
+
+        const data = await response.json();
+
+        if (data.foods && data.foods.length > 0) {
+            totalCalories += data.foods[0].nf_calories || 0;
+        }
+    }
+
+    res.render('home', { totalCalories: Math.round(totalCalories) });
 });
 
 app.get('/logout', (req,res) =>{

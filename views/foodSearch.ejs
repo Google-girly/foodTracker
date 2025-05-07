@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <title>Food search Test</title>
+</head>
+<body>
+  <h2>Food Calorie Tracker</h2>
+
+  Search for food: 
+  <input type="text" id="search"> 
+
+  Meal type:
+  <select id="mealType">
+    <option value="Breakfast">Breakfast</option>
+    <option value="Lunch">Lunch</option>
+    <option value="Dinner">Dinner</option>
+    <option value="Snack">Snack</option>
+  </select>
+
+  <button id="submit">Submit</button>
+  <br><br>
+  
+  Calories: <span id="results"></span>
+
+  <h3>Meal History</h3>
+  <table id="mealHistory">
+    <tr>
+        <th>Meal Type</th>
+        <th>Food</th>
+        <th>Calories</th>
+        <th>Cholesterol</th>
+        <th>Fiber</th>
+        <th>Potassium</th>
+        <th>Protein</th>
+        <th>Sodium</th>
+        <th>Sugars</th>
+        <th>Fat</th>
+        <th>Carbs</th>
+    </tr>
+  </table>
+
+  <h3>Total Calories by Meal</h3>
+  <ul>
+    <li>Breakfast: <span id="breakfastTotal">0</span></li>
+    <li>Lunch: <span id="lunchTotal">0</span></li>
+    <li>Dinner: <span id="dinnerTotal">0</span></li>
+    <li>Snack: <span id="snackTotal">0</span></li>
+  </ul>
+
+  <script>
+    let totals = {
+      Breakfast: 0,
+      Lunch: 0,
+      Dinner: 0,
+      Snack: 0
+    };
+
+    document.querySelector("#submit").addEventListener('click', search);
+
+    function search() {
+      let query = document.getElementById('search').value;
+      let mealType = document.getElementById('mealType').value;
+      document.querySelector("#results").innerHTML = "";
+
+      fetch('https://trackapi.nutritionix.com/v2/natural/nutrients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-app-id': '3b4cc9c0',
+          'x-app-key': '962140f8e8d0de29390218b734440410'
+        },
+        body: JSON.stringify({ query: query })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        let food = data.foods[0].food_name;
+        let calories = data.foods[0].nf_calories;
+        let cholesterol = data.foods[0].nf_cholesterol;
+        let fiber = data.foods[0].nf_dietary_fiber;
+        let potassium = data.foods[0].nf_potassium;
+        let protein = data.foods[0].nf_protein;
+        let sodium = data.foods[0].nf_sodium;
+        let sugars = data.foods[0].nf_sugars;
+        let fat = data.foods[0].nf_total_fat;
+        let carbs = data.foods[0].nf_total_carbohydrate;
+
+        document.querySelector("#results").innerHTML = calories;
+
+        let table = document.getElementById("mealHistory");
+        let newRow = table.insertRow();
+        newRow.insertCell(0).textContent = mealType;
+        newRow.insertCell(1).textContent = food;
+        newRow.insertCell(2).textContent = calories;
+        newRow.insertCell(3).textContent = cholesterol;
+        newRow.insertCell(4).textContent = fiber;
+        newRow.insertCell(5).textContent = potassium;
+        newRow.insertCell(6).textContent = protein;
+        newRow.insertCell(7).textContent = sodium;
+        newRow.insertCell(8).textContent = sugars;
+        newRow.insertCell(9).textContent = fat;
+        newRow.insertCell(10).textContent = carbs;
+
+
+        totals[mealType] += calories;
+        document.getElementById(mealType.toLowerCase() + "Total").textContent = totals[mealType].toFixed(1);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    }
+  </script>
+</body>
+</html>
